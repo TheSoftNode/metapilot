@@ -1,0 +1,1 @@
+export { MultiChainPortfolio } from './MultiChainPortfolio';

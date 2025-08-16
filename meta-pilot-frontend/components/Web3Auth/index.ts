@@ -1,0 +1,1 @@
+export { Web3AuthModal } from './Web3AuthModal';

@@ -1,0 +1,10 @@
+https://web3auth.io/docs/features/mfa
+https://web3auth.io/docs/how-web3auth-works
+https://web3auth.io/docs/quick-start?framework=REACT&stepIndex=0
+https://web3auth.io/docs/connect-blockchain/solana
+https://web3auth.io/docs/connect-blockchain/solana/web
+https://web3auth.io/docs/guides/solana-pay
+https://docs.solanapay.com/
+https://docs.sns.id/dev
+https://www.npmjs.com/package/@bonfida/spl-name-service
+https://www.npmjs.com/package/@bonfida/sub-register
