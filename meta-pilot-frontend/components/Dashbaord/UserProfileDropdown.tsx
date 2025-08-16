@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useWallet } from "@/hooks/use-wallet";
-import { useWeb3AuthContext } from "@/components/Providers/web3auth-provider";
+import { useWeb3AuthDisconnect, useWeb3AuthUser } from "@web3auth/modal/react";
 import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -35,19 +35,11 @@ import { useEffect } from "react";
 const UserProfileDropdown: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [copied, setCopied] = useState(false);
-    const [userInfo, setUserInfo] = useState<any>(null);
     const { address } = useWallet();
-    const { getUserInfo, disconnect, isConnected } = useWeb3AuthContext();
+    const { disconnect } = useWeb3AuthDisconnect();
+    const { userInfo } = useWeb3AuthUser();
     const { primaryAddress, currentNetwork } = useMultiChainWallet();
     const router = useRouter();
-
-    // Get user info from Web3Auth
-    useEffect(() => {
-        if (isConnected) {
-            const info = getUserInfo();
-            setUserInfo(info);
-        }
-    }, [isConnected, getUserInfo]);
 
     // Generate user object from Web3Auth data or fallback
     const user = {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useWeb3AuthContext } from "@/components/Providers/web3auth-provider";
+import { useWeb3Auth, useWeb3AuthConnect, useWeb3AuthDisconnect } from "@web3auth/modal/react";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export interface MultiChainWalletState {
@@ -24,16 +24,12 @@ export interface MultiChainWalletState {
 }
 
 export function useMultiChainWallet() {
-    const { 
-        provider, 
-        isConnected: web3AuthConnected, 
-        isConnecting, 
-        setIsConnecting, 
-        connectionError, 
-        setConnectionError, 
-        currentNetwork,
-        disconnect: web3AuthDisconnect 
-    } = useWeb3AuthContext();
+    const { provider } = useWeb3Auth();
+    const { isConnected: web3AuthConnected, loading: isConnecting, error: connectionError } = useWeb3AuthConnect();
+    const { disconnect: web3AuthDisconnect } = useWeb3AuthDisconnect();
+    
+    // Add current network state since it's no longer provided by context
+    const [currentNetwork, setCurrentNetwork] = useState<'ethereum' | 'solana'>('ethereum');
     
     // Local state for wallet information
     const [ethAddress, setEthAddress] = useState<string | undefined>();
@@ -109,9 +105,6 @@ export function useMultiChainWallet() {
 
     // Enhanced connect function for Web3Auth
     const handleConnect = async (method?: 'social' | 'wallet', walletType?: string) => {
-        setIsConnecting(true);
-        setConnectionError(null);
-
         try {
             if (method === 'social') {
                 // Social authentication through Web3Auth
@@ -124,9 +117,6 @@ export function useMultiChainWallet() {
             }
         } catch (err) {
             console.error("Connection error:", err);
-            setConnectionError(err instanceof Error ? err.message : "Connection failed");
-        } finally {
-            setIsConnecting(false);
         }
     };
 
@@ -135,9 +125,6 @@ export function useMultiChainWallet() {
         try {
             // Disconnect from Web3Auth
             await web3AuthDisconnect();
-            
-            // Clear any connection errors
-            setConnectionError(null);
         } catch (error) {
             console.error("Disconnect error:", error);
         }
@@ -181,7 +168,7 @@ export function useMultiChainWallet() {
             connection: undefined, // Will be set up properly later
         },
         isLoading: isConnecting || isLoadingSolBalance,
-        error: connectionError || undefined,
+        error: connectionError?.message || undefined,
     };
 
     return {
@@ -203,6 +190,7 @@ export function useMultiChainWallet() {
         
         // Network switching
         currentNetwork,
+        setCurrentNetwork,
         
         // Legacy compatibility (for existing components)
         address: getPrimaryAddress(),

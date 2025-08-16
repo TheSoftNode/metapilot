@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
-import { useWeb3AuthContext } from "@/components/Providers/web3auth-provider";
+// Network switching functionality is handled by useMultiChainWallet hook
 
 interface Network {
     id: string;
@@ -73,8 +73,7 @@ export const NetworkSwitcher: React.FC<NetworkSwitcherProps> = ({
     const [switching, setSwitching] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
-    const { currentNetwork, ethereum, solana } = useMultiChainWallet();
-    const { setCurrentNetwork } = useWeb3AuthContext();
+    const { currentNetwork, ethereum, solana, setCurrentNetwork } = useMultiChainWallet();
 
     // Get current network data
     const currentNetworkData = SUPPORTED_NETWORKS.find(n => n.id === currentNetwork) || SUPPORTED_NETWORKS[0];

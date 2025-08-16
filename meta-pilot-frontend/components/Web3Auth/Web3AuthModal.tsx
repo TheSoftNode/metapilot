@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useWeb3AuthContext } from "@/components/Providers/web3auth-provider";
+import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser } from "@web3auth/modal/react";
 import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
 import { useRouter } from "next/navigation";
 
@@ -175,15 +175,19 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
     const [authMethod, setAuthMethod] = useState<AuthMethod>("social");
     const [email, setEmail] = useState("");
     
-    // Use the new no-modal Web3Auth context
+    // Use the Web3Auth React hooks
     const { 
+        connect,
         isConnected, 
-        isConnecting, 
-        connectionError, 
-        connectTo,
-        disconnect: web3AuthDisconnect,
-        getUserInfo 
-    } = useWeb3AuthContext();
+        loading: isConnecting, 
+        error: connectionError
+    } = useWeb3AuthConnect();
+    
+    const { 
+        disconnect: web3AuthDisconnect
+    } = useWeb3AuthDisconnect();
+    
+    const { userInfo } = useWeb3AuthUser();
     
     const { currentNetwork } = useMultiChainWallet();
     const router = useRouter();
@@ -209,7 +213,7 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
     const handleSocialAuth = async (provider: string) => {
         try {
             setConnectionStatus("connecting");
-            await connectTo(provider); // Direct provider connection - no modal!
+            await connect(); // Use Web3Auth modal - user selects provider in modal
         } catch (error) {
             console.error(`${provider} authentication failed:`, error);
             setConnectionStatus("error");
@@ -220,7 +224,7 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
         if (!email.trim()) return;
         try {
             setConnectionStatus("connecting");
-            await connectTo("email_passwordless");
+            await connect(); // Use Web3Auth modal - user can select email auth
         } catch (error) {
             console.error("Email authentication failed:", error);
             setConnectionStatus("error");
@@ -230,9 +234,7 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
     const handleWalletConnect = async (walletId: string) => {
         try {
             setConnectionStatus("connecting");
-            // For now, wallet connections will be implemented later
-            // Using social auth as placeholder
-            await connectTo("google");
+            await connect(); // Use Web3Auth modal - user can select wallet
         } catch (error) {
             console.error(`${walletId} connection failed:`, error);
             setConnectionStatus("error");

@@ -5,7 +5,7 @@ import { ChevronDown, User, LogOut, LayoutDashboard, Wallet } from "lucide-react
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useWeb3AuthContext } from "@/components/Providers/web3auth-provider";
+import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser } from "@web3auth/modal/react";
 import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
 import { useRouter } from "next/navigation";
 
@@ -23,19 +23,11 @@ interface UserDropdownProps {
 
 const UserDropdown: React.FC<UserDropdownProps> = ({ className }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-    const { getUserInfo, disconnect, isConnected } = useWeb3AuthContext();
+    const { isConnected } = useWeb3AuthConnect();
+    const { disconnect } = useWeb3AuthDisconnect();
+    const { userInfo } = useWeb3AuthUser();
     const { primaryAddress, formatAddress, currentNetwork } = useMultiChainWallet();
     const router = useRouter();
-
-    useEffect(() => {
-        if (isConnected) {
-            const info = getUserInfo();
-            setUserInfo(info);
-        } else {
-            setUserInfo(null);
-        }
-    }, [isConnected, getUserInfo]);
 
     const handleDisconnect = async () => {
         await disconnect();

@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useTheme } from "next-themes";
 import CreateTaskModal from "./Tasks/CreateTaskModal";
-import { useWeb3AuthContext } from "@/components/Providers/web3auth-provider";
+import { useWeb3AuthDisconnect } from "@web3auth/modal/react";
 import { useRouter } from "next/navigation";
 
 interface NavItem {
@@ -71,7 +71,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
     const pathname = usePathname();
     const { theme } = useTheme();
-    const { disconnect } = useWeb3AuthContext();
+    const { disconnect } = useWeb3AuthDisconnect();
     const router = useRouter();
 
     // Handle logout
