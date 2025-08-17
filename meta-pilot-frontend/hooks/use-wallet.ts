@@ -20,7 +20,7 @@ export function useWallet() {
     const handleConnect = async (connectorId: string) => {
         // For now, just use the multi-chain wallet's connect function
         // This could be enhanced to map specific connector IDs to Web3Auth methods
-        await multiChainWallet.connect('social', connectorId);
+        await multiChainWallet.connect(connectorId);
     };
 
     // Handle disconnect

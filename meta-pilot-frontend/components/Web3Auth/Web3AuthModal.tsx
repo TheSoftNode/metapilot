@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Shield, Check, AlertCircle, Loader2, Mail, Smartphone, Github, Apple, MessageCircle } from "lucide-react";
+import { Shield, Check, AlertCircle, Loader2, Mail, Smartphone, Github, Apple, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -12,11 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser } from "@web3auth/modal/react";
-import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
 import { useRouter } from "next/navigation";
+import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
+import MetaPilotLogo from "@/components/Shared/MetaPilotLogo";
 
-// Enhanced Social Auth Icons with proper branding
 const GoogleIcon = () => (
     <svg viewBox="0 0 24 24" className="h-5 w-5">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -62,25 +61,6 @@ const AppleIcon = () => (
     </svg>
 );
 
-const TelegramIcon = () => (
-    <svg viewBox="0 0 24 24" className="h-5 w-5">
-        <path fill="#0088CC" d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-    </svg>
-);
-
-const WeChatIcon = () => (
-    <svg viewBox="0 0 24 24" className="h-5 w-5">
-        <path fill="#07C160" d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.448c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.376-8.596-6.376zM5.785 5.991c.642 0 1.162.529 1.162 1.18 0 .659-.52 1.188-1.162 1.188-.642 0-1.162-.529-1.162-1.188 0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18 0 .659-.52 1.188-1.162 1.188-.642 0-1.162-.529-1.162-1.188 0-.651.52-1.18 1.162-1.18zm2.844 2.794c-3.547 0-6.42 2.335-6.42 5.218 0 1.728.87 3.281 2.305 4.444a.59.59 0 0 1 .213.665l-.39 1.448c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098c.543.194 1.162.31 1.828.31 3.547 0 6.42-2.335 6.42-5.218s-2.873-5.218-6.42-5.218z"/>
-    </svg>
-);
-
-const LineIcon = () => (
-    <svg viewBox="0 0 24 24" className="h-5 w-5">
-        <path fill="#00C300" d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.771.039 1.078l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
-    </svg>
-);
-
-// Wallet Icons
 const MetaMaskIcon = () => (
     <div className="relative">
         <svg viewBox="0 0 40 40" className="h-8 w-8">
@@ -116,14 +96,13 @@ const PhantomIcon = () => (
 );
 
 type ConnectionStatus = "idle" | "connecting" | "success" | "error";
-type AuthMethod = "social" | "email" | "wallet";
+type AuthMethod = "social" | "email" | "sms" | "wallet";
 
 interface Web3AuthModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-// Social Auth Providers from Web3Auth documentation (only supported ones)
 const socialProviders = [
     { id: "google", name: "Google", icon: GoogleIcon, color: "hover:bg-blue-50 dark:hover:bg-blue-900/20" },
     { id: "facebook", name: "Facebook", icon: FacebookIcon, color: "hover:bg-blue-50 dark:hover:bg-blue-900/20" },
@@ -134,7 +113,6 @@ const socialProviders = [
     { id: "apple", name: "Apple", icon: AppleIcon, color: "hover:bg-gray-50 dark:hover:bg-gray-900/20" },
 ];
 
-// Wallet Providers
 const walletProviders = [
     { 
         id: "metamask", 
@@ -174,75 +152,121 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("idle");
     const [authMethod, setAuthMethod] = useState<AuthMethod>("social");
     const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+    const [connectionError, setConnectionError] = useState<string | null>(null);
     
-    // Use the Web3Auth React hooks
-    const { 
-        connect,
-        isConnected, 
-        loading: isConnecting, 
-        error: connectionError
-    } = useWeb3AuthConnect();
-    
-    const { 
-        disconnect: web3AuthDisconnect
-    } = useWeb3AuthDisconnect();
-    
-    const { userInfo } = useWeb3AuthUser();
-    
-    const { currentNetwork } = useMultiChainWallet();
     const router = useRouter();
+    
+    // Use real Web3Auth functions
+    const { 
+        handleSocialAuth, 
+        handleEmailAuth, 
+        handleSmsAuth,
+        handleWalletConnect,
+        isConnected,
+        isConnecting,
+        isInitialized,
+        error,
+        userInfo
+    } = useMultiChainWallet();
 
-    // Update connection status based on wallet state
+    // Real social authentication
+    const handleSocialAuthClick = async (provider: string) => {
+        try {
+            setConnectionStatus("connecting");
+            setConnectionError(null);
+            
+            await handleSocialAuth(provider);
+            
+            setConnectionStatus("success");
+        } catch (error) {
+            console.error(`${provider} authentication failed:`, error);
+            setConnectionStatus("error");
+            setConnectionError("Authentication failed. Please try again.");
+        }
+    };
+
+    // Real email authentication
+    const handleEmailAuthClick = async () => {
+        if (!email.trim()) return;
+        try {
+            setConnectionStatus("connecting");
+            setConnectionError(null);
+            
+            await handleEmailAuth(email);
+            
+            setConnectionStatus("success");
+        } catch (error) {
+            console.error("Email authentication failed:", error);
+            setConnectionStatus("error");
+            setConnectionError("Email authentication failed. Please try again.");
+        }
+    };
+
+    // Real SMS authentication
+    const handleSmsAuthClick = async () => {
+        if (!phone.trim()) return;
+        try {
+            setConnectionStatus("connecting");
+            setConnectionError(null);
+            
+            await handleSmsAuth(phone);
+            
+            setConnectionStatus("success");
+        } catch (error) {
+            console.error("SMS authentication failed:", error);
+            setConnectionStatus("error");
+            setConnectionError("SMS authentication failed. Please try again.");
+        }
+    };
+
+    // Real wallet connection
+    const handleWalletConnectClick = async (walletId: string) => {
+        try {
+            setConnectionStatus("connecting");
+            setConnectionError(null);
+            
+            await handleWalletConnect(walletId);
+            
+            setConnectionStatus("success");
+        } catch (error) {
+            console.error(`${walletId} connection failed:`, error);
+            setConnectionStatus("error");
+            setConnectionError("Wallet connection failed. Please try again.");
+        }
+    };
+
+    // Monitor connection state
     useEffect(() => {
         if (isConnecting) {
             setConnectionStatus("connecting");
         } else if (isConnected) {
             setConnectionStatus("success");
-            // Auto-close modal after successful connection
+        } else if (error) {
+            setConnectionStatus("error");
+            setConnectionError(
+                typeof error === "object" && error !== null && "message" in error
+                    ? (error as { message: string }).message
+                    : typeof error === "string"
+                        ? error
+                        : "Connection failed"
+            );
+        }
+    }, [isConnecting, isConnected, error]);
+
+    // Handle success redirect
+    useEffect(() => {
+        if (connectionStatus === "success" && isConnected) {
             setTimeout(() => {
                 onOpenChange(false);
                 router.push("/dashboard");
             }, 2000);
-        } else if (connectionError) {
-            setConnectionStatus("error");
-        } else {
-            setConnectionStatus("idle");
         }
-    }, [isConnecting, isConnected, connectionError, onOpenChange, router]);
-
-    const handleSocialAuth = async (provider: string) => {
-        try {
-            setConnectionStatus("connecting");
-            await connect(); // Use Web3Auth modal - user selects provider in modal
-        } catch (error) {
-            console.error(`${provider} authentication failed:`, error);
-            setConnectionStatus("error");
-        }
-    };
-
-    const handleEmailAuth = async () => {
-        if (!email.trim()) return;
-        try {
-            setConnectionStatus("connecting");
-            await connect(); // Use Web3Auth modal - user can select email auth
-        } catch (error) {
-            console.error("Email authentication failed:", error);
-            setConnectionStatus("error");
-        }
-    };
-
-    const handleWalletConnect = async (walletId: string) => {
-        try {
-            setConnectionStatus("connecting");
-            await connect(); // Use Web3Auth modal - user can select wallet
-        } catch (error) {
-            console.error(`${walletId} connection failed:`, error);
-            setConnectionStatus("error");
-        }
-    };
+    }, [connectionStatus, isConnected, onOpenChange, router]);
 
     const resetConnection = () => {
         setConnectionStatus("idle");
+        setConnectionError(null);
     };
 
     const closeAndReset = (openState: boolean) => {
@@ -250,7 +274,9 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
             setTimeout(() => {
                 setConnectionStatus("idle");
                 setEmail("");
+                setPhone("");
                 setAuthMethod("social");
+                setConnectionError(null);
             }, 300);
         }
         onOpenChange(openState);
@@ -262,22 +288,13 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
                 {/* Header */}
                 <DialogHeader className="px-8 pt-8 pb-0">
                     <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
-                                Welcome to MetaPilot
-                            </DialogTitle>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                        <div className="flex flex-col items-center w-full">
+                            <MetaPilotLogo className="h-8 mb-2" />
+                            <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
                                 Connect your account to start automating Web3 tasks
                             </p>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onOpenChange(false)}
-                            className="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
+                       
                     </div>
 
                     {/* Method Tabs */}
@@ -285,6 +302,7 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
                         {[
                             { id: "social", label: "Social", icon: MessageCircle },
                             { id: "email", label: "Email", icon: Mail },
+                            { id: "sms", label: "SMS", icon: Smartphone },
                             { id: "wallet", label: "Wallet", icon: Smartphone },
                         ].map((method) => (
                             <button
@@ -306,7 +324,28 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
 
                 <div className="px-8 pb-8">
                     <AnimatePresence mode="wait">
-                        {connectionStatus === "idle" && (
+                        {!isInitialized && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2 }}
+                                className="mt-6 text-center"
+                            >
+                                <div className="flex items-center justify-center gap-3 py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                                    <div className="text-center">
+                                        <p className="text-slate-600 dark:text-slate-400">
+                                            Initializing Web3Auth...
+                                        </p>
+                                        <p className="text-xs text-slate-400 mt-1">
+                                            Status: {JSON.stringify(isInitialized)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                        {isInitialized && connectionStatus === "idle" && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -323,11 +362,12 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
                                                     key={provider.id}
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
-                                                    onClick={() => handleSocialAuth(provider.id)}
+                                                    onClick={() => handleSocialAuthClick(provider.id)}
+                                                    disabled={!isInitialized || isConnecting}
                                                     className={cn(
                                                         "flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-700 rounded-xl transition-all",
                                                         "hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md",
-                                                        provider.color
+                                                        !isInitialized || isConnecting ? "opacity-50 cursor-not-allowed" : provider.color
                                                     )}
                                                 >
                                                     <provider.icon />
@@ -351,19 +391,49 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 className="h-12 px-4 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
-                                                onKeyPress={(e) => e.key === 'Enter' && handleEmailAuth()}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleEmailAuthClick()}
                                             />
                                         </div>
                                         <Button
-                                            onClick={handleEmailAuth}
-                                            disabled={!email.trim()}
-                                            className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl"
+                                            onClick={handleEmailAuthClick}
+                                            disabled={!email.trim() || !isInitialized || isConnecting}
+                                            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
                                         >
                                             <Mail className="mr-2 h-4 w-4" />
                                             Continue with Email
                                         </Button>
                                         <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
                                             We'll send you a secure login link via email
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* SMS Authentication */}
+                                {authMethod === "sms" && (
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                Phone Number
+                                            </label>
+                                            <Input
+                                                type="tel"
+                                                placeholder="+1-2125551234"
+                                                value={phone}
+                                                onChange={(e) => setPhone(e.target.value)}
+                                                className="h-12 px-4 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                                                onKeyDown={(e) => e.key === 'Enter' && handleSmsAuthClick()}
+                                            />
+                                        </div>
+                                        <Button
+                                            onClick={handleSmsAuthClick}
+                                            disabled={!phone.trim() || !isInitialized || isConnecting}
+                                            className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors"
+                                        >
+                                            <Smartphone className="mr-2 h-4 w-4" />
+                                            Continue with SMS
+                                        </Button>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                                            Format: +{"{country-code}"}-{"{number}"} (e.g., +1-2125551234 or +234-9038726950)
                                         </p>
                                     </div>
                                 )}
@@ -376,8 +446,12 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
                                                 key={wallet.id}
                                                 whileHover={{ scale: 1.01 }}
                                                 whileTap={{ scale: 0.99 }}
-                                                onClick={() => handleWalletConnect(wallet.id)}
-                                                className="w-full flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all"
+                                                onClick={() => handleWalletConnectClick(wallet.id)}
+                                                disabled={!isInitialized || isConnecting}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all",
+                                                    !isInitialized || isConnecting ? "opacity-50 cursor-not-allowed" : ""
+                                                )}
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <wallet.icon />
@@ -492,7 +566,7 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
                         >
                             <div className="flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3">
                                 <Shield className="h-4 w-4" />
-                                <span className="font-medium">Secured by Web3Auth</span>
+                                <span className="font-medium">Secured Connection</span>
                             </div>
                             <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
                                 By connecting, you agree to our{" "}
@@ -511,4 +585,3 @@ export const Web3AuthModal: React.FC<Web3AuthModalProps> = ({ open, onOpenChange
         </Dialog>
     );
 };
-

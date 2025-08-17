@@ -47,7 +47,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useWallet } from "@/hooks/use-wallet";
-import UserProfileDropdown from "@/components/Dashbaord/UserProfileDropdown";
 import TokenBalances from "@/components/Dashbaord/TokenBalances";
 
 // Transaction Types

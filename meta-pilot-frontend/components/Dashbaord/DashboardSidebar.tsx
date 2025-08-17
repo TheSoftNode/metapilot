@@ -36,8 +36,8 @@ import {
 } from "@/components/ui/tooltip";
 import { useTheme } from "next-themes";
 import CreateTaskModal from "./Tasks/CreateTaskModal";
-import { useWeb3AuthDisconnect } from "@web3auth/modal/react";
 import { useRouter } from "next/navigation";
+import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
 
 interface NavItem {
     name: string;
@@ -71,13 +71,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
     const pathname = usePathname();
     const { theme } = useTheme();
-    const { disconnect } = useWeb3AuthDisconnect();
     const router = useRouter();
+    const { disconnect } = useMultiChainWallet();
 
     // Handle logout
     const handleLogout = async () => {
         try {
+            // Disconnect Web3Auth wallet
             await disconnect();
+            console.log('User logged out');
             router.push('/');
         } catch (error) {
             console.error('Logout failed:', error);

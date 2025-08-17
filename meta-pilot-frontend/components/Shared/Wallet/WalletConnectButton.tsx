@@ -6,8 +6,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Web3AuthModal } from "@/components/Web3Auth/Web3AuthModal";
-import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
 import UserDropdown from "@/components/Shared/UserDropdown";
+import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
 
 interface WalletConnectButtonProps {
     buttonClass?: string;
@@ -17,7 +17,6 @@ interface WalletConnectButtonProps {
 const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({ buttonClass, className }) => {
     const [showDialog, setShowDialog] = useState<boolean>(false);
     const { isConnected } = useMultiChainWallet();
-
     return (
         <>
             {isConnected ? (

@@ -1,8 +1,12 @@
 "use client";
 
+import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser, useWeb3Auth } from "@web3auth/modal/react";
+import { useAccount } from "wagmi"; // Ethereum
+import { useSolanaWallet } from "@web3auth/modal/react/solana"; // Solana
+import { WALLET_CONNECTORS, AUTH_CONNECTION } from "@web3auth/modal";
+import { getED25519Key } from "@web3auth/modal";
+import { Keypair, Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
-import { useWeb3Auth, useWeb3AuthConnect, useWeb3AuthDisconnect } from "@web3auth/modal/react";
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export interface MultiChainWalletState {
     ethereum: {
@@ -24,78 +28,136 @@ export interface MultiChainWalletState {
 }
 
 export function useMultiChainWallet() {
-    const { provider } = useWeb3Auth();
-    const { isConnected: web3AuthConnected, loading: isConnecting, error: connectionError } = useWeb3AuthConnect();
-    const { disconnect: web3AuthDisconnect } = useWeb3AuthDisconnect();
+    // Web3Auth hooks
+    const { connectTo, isConnected, loading: connectLoading, error: connectError } = useWeb3AuthConnect();
+    const { disconnect, loading: disconnectLoading } = useWeb3AuthDisconnect();
+    const { userInfo } = useWeb3AuthUser();
+    const { provider, isInitialized } = useWeb3Auth();
     
-    // Add current network state since it's no longer provided by context
+    // Ethereum wallet (Wagmi)
+    const { address: ethAddress, isConnected: ethConnected } = useAccount();
+    
+    // Solana wallet
+    const { accounts: solAccounts, connection: solConnection } = useSolanaWallet();
+    
+    // Local state
+    const [solanaAddress, setSolanaAddress] = useState<string | undefined>();
+    const [solanaBalance] = useState<number>(0);
+    const [ethereumBalance] = useState<string>("0");
     const [currentNetwork, setCurrentNetwork] = useState<'ethereum' | 'solana'>('ethereum');
     
-    // Local state for wallet information
-    const [ethAddress, setEthAddress] = useState<string | undefined>();
-    const [ethBalance, setEthBalance] = useState<{formatted: string, symbol: string} | undefined>();
-    const [chainId, setChainId] = useState<number | undefined>();
-    const [solBalance, setSolBalance] = useState<number>(0);
-    const [isLoadingSolBalance, setIsLoadingSolBalance] = useState(false);
-    const [solAddress, setSolAddress] = useState<string | null>(null);
-
-    // Extract wallet account info from Web3Auth provider
+    // Derive Solana address from Ethereum private key
     useEffect(() => {
-        const getWalletInfo = async () => {
-            if (provider && web3AuthConnected) {
+        const deriveSolanaAddress = async () => {
+            if (provider && isConnected) {
                 try {
-                    // For Web3Auth no-modal, use eth_accounts for getting accounts
-                    let accounts: string[] = [];
-                    
-                    try {
-                        const ethAccounts = await provider.request({ method: "eth_accounts" });
-                        if (ethAccounts && Array.isArray(ethAccounts)) {
-                            accounts = ethAccounts;
-                        }
-                    } catch (accountError) {
-                        console.log("Failed to get accounts:", accountError);
-                        // Try alternative method
-                        try {
-                            const address = await provider.request({ method: "eth_coinbase" });
-                            if (address) {
-                                accounts = [address as string];
-                            }
-                        } catch (fallbackError) {
-                            console.log("Alternative method also failed:", fallbackError);
-                        }
-                    }
-                    
-                    if (accounts.length > 0) {
-                        if (currentNetwork === 'solana') {
-                            setSolAddress(accounts[0]);
-                            setSolBalance(1.5); // Mock balance
-                            // Clear Ethereum data
-                            setEthAddress(undefined);
-                            setEthBalance(undefined);
-                        } else {
-                            setEthAddress(accounts[0]);
-                            setEthBalance({ formatted: "0.5", symbol: "ETH" });
-                            setChainId(1); // Mainnet
-                            // Clear Solana data
-                            setSolAddress(null);
-                            setSolBalance(0);
-                        }
-                    }
+                    const ethPrivateKey = await provider.request({ method: "private_key" });
+                    const privateKey = getED25519Key(ethPrivateKey as string).sk.toString("hex");
+                    const secretKey = new Uint8Array(Buffer.from(privateKey, 'hex'));
+                    const keypair = Keypair.fromSecretKey(secretKey);
+                    setSolanaAddress(keypair.publicKey.toBase58());
                 } catch (error) {
-                    console.error("Failed to get wallet info:", error);
+                    console.error("Error deriving Solana address:", error);
                 }
-            } else {
-                // Clear all data when disconnected
-                setSolAddress(null);
-                setSolBalance(0);
-                setEthAddress(undefined);
-                setEthBalance(undefined);
-                setChainId(undefined);
             }
         };
+        
+        deriveSolanaAddress();
+    }, [provider, isConnected]);
 
-        getWalletInfo();
-    }, [provider, web3AuthConnected, currentNetwork]);
+    // Social authentication functions for custom modal
+    const handleSocialAuth = async (provider: string) => {
+        try {
+            // Check if Web3Auth is initialized before attempting connection
+            if (!isInitialized) {
+                throw new Error("Web3Auth is not initialized yet. Please wait a moment and try again.");
+            }
+
+            const authConnectionMap: Record<string, string> = {
+                google: AUTH_CONNECTION.GOOGLE,
+                facebook: AUTH_CONNECTION.FACEBOOK,
+                twitter: AUTH_CONNECTION.TWITTER,
+                discord: AUTH_CONNECTION.DISCORD,
+                linkedin: AUTH_CONNECTION.LINKEDIN,
+                github: AUTH_CONNECTION.GITHUB,
+                apple: AUTH_CONNECTION.APPLE,
+            };
+
+            await connectTo(WALLET_CONNECTORS.AUTH, {
+                authConnection: authConnectionMap[provider] || AUTH_CONNECTION.GOOGLE,
+            });
+        } catch (error) {
+            console.error(`${provider} authentication failed:`, error);
+            throw error;
+        }
+    };
+
+    // Email authentication
+    const handleEmailAuth = async (email: string) => {
+        try {
+            // Check if Web3Auth is initialized before attempting connection
+            if (!isInitialized) {
+                throw new Error("Web3Auth is not initialized yet. Please wait a moment and try again.");
+            }
+
+            await connectTo(WALLET_CONNECTORS.AUTH, {
+                authConnection: AUTH_CONNECTION.EMAIL_PASSWORDLESS,
+                // authConnectionId: "metapilot1", // Disabled for testing
+                extraLoginOptions: {
+                    login_hint: email.trim(),
+                },
+            });
+        } catch (error) {
+            console.error("Email authentication failed:", error);
+            throw error;
+        }
+    };
+
+    // SMS authentication
+    const handleSmsAuth = async (phone: string) => {
+        try {
+            // Check if Web3Auth is initialized before attempting connection
+            if (!isInitialized) {
+                throw new Error("Web3Auth is not initialized yet. Please wait a moment and try again.");
+            }
+
+            await connectTo(WALLET_CONNECTORS.AUTH, {
+                authConnection: AUTH_CONNECTION.SMS_PASSWORDLESS,
+                // authConnectionId: "metapilot2", // Disabled for testing
+                extraLoginOptions: {
+                    login_hint: phone.trim(),
+                },
+            });
+        } catch (error) {
+            console.error("SMS authentication failed:", error);
+            throw error;
+        }
+    };
+
+    // Traditional wallet connection
+    const handleWalletConnect = async (walletId: string) => {
+        try {
+            // Check if Web3Auth is initialized before attempting connection
+            if (!isInitialized) {
+                throw new Error("Web3Auth is not initialized yet. Please wait a moment and try again.");
+            }
+
+            const walletConnectorMap: Record<string, string> = {
+                metamask: WALLET_CONNECTORS.METAMASK,
+                walletconnect: WALLET_CONNECTORS.WALLET_CONNECT_V2,
+                coinbase: WALLET_CONNECTORS.COINBASE,
+                phantom: WALLET_CONNECTORS.METAMASK, // Phantom uses MetaMask connector
+            };
+
+            const connector = walletConnectorMap[walletId];
+            if (connector) {
+                await connectTo(connector as any);
+            }
+        } catch (error) {
+            console.error(`${walletId} connection failed:`, error);
+            throw error;
+        }
+    };
 
     // Format address for display
     const formatAddress = (addr?: string) => {
@@ -103,100 +165,61 @@ export function useMultiChainWallet() {
         return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
     };
 
-    // Enhanced connect function for Web3Auth
-    const handleConnect = async (method?: 'social' | 'wallet', walletType?: string) => {
-        try {
-            if (method === 'social') {
-                // Social authentication through Web3Auth
-                // This will be handled by the Web3Auth modal
-                console.log("Social authentication will be handled by Web3Auth modal");
-            } else if (method === 'wallet' && walletType) {
-                // Traditional wallet connection would need to be implemented
-                // For now, we'll focus on Web3Auth social authentication
-                console.log(`Traditional wallet connection for ${walletType} would be implemented here`);
-            }
-        } catch (err) {
-            console.error("Connection error:", err);
-        }
-    };
-
-    // Enhanced disconnect function
-    const handleDisconnect = async () => {
-        try {
-            // Disconnect from Web3Auth
-            await web3AuthDisconnect();
-        } catch (error) {
-            console.error("Disconnect error:", error);
-        }
-    };
-
-    // Get current wallet state
-    const getCurrentWallet = (): 'ethereum' | 'solana' | 'none' => {
-        if (ethAddress) return 'ethereum';
-        if (solAddress) return 'solana';
-        return 'none';
-    };
-
-    // Check if any wallet is connected
-    const isAnyWalletConnected = !!ethAddress || !!solAddress || web3AuthConnected;
-
-    // Get primary address based on current network
-    const getPrimaryAddress = () => {
-        if (currentNetwork === 'solana' && solAddress) {
-            return solAddress;
-        }
-        if (currentNetwork === 'ethereum' && ethAddress) {
-            return ethAddress;
-        }
-        return ethAddress || solAddress;
-    };
-
     // Build wallet state object
     const walletState: MultiChainWalletState = {
         ethereum: {
             address: ethAddress,
-            isConnected: !!ethAddress,
-            balance: ethBalance?.formatted,
-            symbol: ethBalance?.symbol,
-            chainId,
+            isConnected: ethConnected,
+            balance: ethereumBalance,
+            symbol: "ETH",
+            chainId: 1,
         },
         solana: {
-            address: solAddress || undefined,
-            isConnected: !!solAddress,
-            balance: solBalance,
-            symbol: 'SOL',
-            connection: undefined, // Will be set up properly later
+            address: solanaAddress || solAccounts?.[0],
+            isConnected: !!solanaAddress || !!solAccounts?.[0],
+            balance: solanaBalance,
+            symbol: "SOL",
+            connection: solConnection || undefined,
         },
-        isLoading: isConnecting || isLoadingSolBalance,
-        error: connectionError?.message || undefined,
+        isLoading: connectLoading || disconnectLoading || !isInitialized,
+        error: connectError?.message,
     };
 
     return {
+        // Connection state
+        isConnected,
+        isConnecting: connectLoading || disconnectLoading,
+        isInitialized,
+        error: connectError,
+        
+        // User information
+        userInfo,
+        
         // Wallet state
         ...walletState,
         
-        // Connection status
-        isConnected: isAnyWalletConnected,
-        isConnecting,
-        currentWallet: getCurrentWallet(),
-        primaryAddress: getPrimaryAddress(),
+        // Connection methods for custom modal
+        handleSocialAuth,
+        handleEmailAuth,
+        handleSmsAuth,
+        handleWalletConnect,
+        disconnect,
         
-        // Utility functions
+        // Utility
         formatAddress,
         
-        // Connection methods
-        connect: handleConnect,
-        disconnect: handleDisconnect,
-        
-        // Network switching
+        // Network management
         currentNetwork,
         setCurrentNetwork,
         
         // Legacy compatibility (for existing components)
-        address: getPrimaryAddress(),
-        status: isAnyWalletConnected ? 'connected' : 'disconnected',
-        balance: currentNetwork === 'solana' ? 
-            { formatted: solBalance.toString(), symbol: 'SOL' } : 
-            ethBalance,
+        address: ethAddress || solanaAddress || solAccounts?.[0],
+        status: isConnected ? 'connected' : 'disconnected',
+        balance: { formatted: ethereumBalance, symbol: "ETH" },
+        currentWallet: ethAddress ? 'ethereum' : (solanaAddress || solAccounts?.[0]) ? 'solana' : 'none',
+        primaryAddress: ethAddress || solanaAddress || solAccounts?.[0],
+        
+        // Connection methods (legacy)
+        connect: handleSocialAuth,
     };
 }

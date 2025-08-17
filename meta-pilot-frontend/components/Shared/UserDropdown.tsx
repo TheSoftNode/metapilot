@@ -1,21 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { ChevronDown, User, LogOut, LayoutDashboard, Wallet } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronDown, LogOut, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser } from "@web3auth/modal/react";
 import { useMultiChainWallet } from "@/hooks/use-multi-chain-wallet";
 import { useRouter } from "next/navigation";
 
-interface UserInfo {
-    email?: string;
-    name?: string;
-    profileImage?: string;
-    verifier?: string;
-    typeOfLogin?: string;
-}
+
 
 interface UserDropdownProps {
     className?: string;
@@ -23,16 +16,26 @@ interface UserDropdownProps {
 
 const UserDropdown: React.FC<UserDropdownProps> = ({ className }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const { isConnected } = useWeb3AuthConnect();
-    const { disconnect } = useWeb3AuthDisconnect();
-    const { userInfo } = useWeb3AuthUser();
-    const { primaryAddress, formatAddress, currentNetwork } = useMultiChainWallet();
+    const { 
+        primaryAddress, 
+        formatAddress, 
+        userInfo, 
+        isConnected,
+        disconnect,
+        ethereum,
+        solana,
+        currentNetwork
+    } = useMultiChainWallet();
     const router = useRouter();
 
     const handleDisconnect = async () => {
-        await disconnect();
-        setIsOpen(false);
-        router.push('/');
+        try {
+            await disconnect();
+            setIsOpen(false);
+            router.push('/');
+        } catch (error) {
+            console.error('Disconnect error:', error);
+        }
     };
 
     const goToDashboard = () => {
@@ -61,20 +64,29 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ className }) => {
 
     // Get connection type display
     const getConnectionType = () => {
-        if (userInfo?.typeOfLogin) {
+        if (userInfo && 'typeOfLogin' in userInfo && typeof userInfo.typeOfLogin === 'string') {
             return userInfo.typeOfLogin.charAt(0).toUpperCase() + userInfo.typeOfLogin.slice(1);
         }
-        return 'Wallet';
+        return 'Web3Auth';
     };
 
     // Get network badge
     const getNetworkBadge = () => {
-        return currentNetwork === 'solana' 
-            ? { name: 'Solana', icon: '◎', color: 'bg-purple-500' }
-            : { name: 'Ethereum', icon: 'Ξ', color: 'bg-blue-500' };
+        // Determine current network based on connected wallets
+        if (solana.isConnected && ethereum.isConnected) {
+            return { name: 'Multi-Chain', icon: '⚡', color: 'bg-gradient-to-r from-blue-500 to-purple-500' };
+        } else if (solana.isConnected) {
+            return { name: 'Solana', icon: '◎', color: 'bg-purple-500' };
+        } else if (ethereum.isConnected) {
+            return { name: 'Ethereum', icon: 'Ξ', color: 'bg-blue-500' };
+        }
+        return { name: 'Web3Auth', icon: '🔐', color: 'bg-gray-500' };
     };
 
-    if (!isConnected) return null;
+    // Don't render if not connected
+    if (!isConnected) {
+        return null;
+    }
 
     const network = getNetworkBadge();
 
@@ -154,20 +166,52 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ className }) => {
                                     </div>
                                 </div>
                                 
-                                {/* Address Display */}
-                                {primaryAddress && (
-                                    <div className="mt-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-md">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-2">
-                                                <Wallet className="h-3 w-3 text-gray-500" />
-                                                <span className="text-xs text-gray-600 dark:text-gray-300">Address</span>
+                                {/* Multi-chain wallet info */}
+                                <div className="mt-3 space-y-2">
+                                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400">Connected Wallets</div>
+                                    
+                                    {ethereum.isConnected && (
+                                        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="w-3 h-3 bg-blue-600 rounded-full flex items-center justify-center">
+                                                        <span className="text-[6px] text-white font-bold">Ξ</span>
+                                                    </div>
+                                                    <span className="text-xs text-gray-600 dark:text-gray-300">Ethereum</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-xs font-mono text-gray-800 dark:text-gray-200">
+                                                        {formatAddress(ethereum.address)}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {ethereum.balance || "0"} ETH
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span className="text-xs font-mono text-gray-800 dark:text-gray-200">
-                                                {formatAddress(primaryAddress)}
-                                            </span>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                    
+                                    {solana.isConnected && (
+                                        <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-md">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="w-3 h-3 bg-purple-600 rounded-full flex items-center justify-center">
+                                                        <span className="text-[6px] text-white font-bold">◎</span>
+                                                    </div>
+                                                    <span className="text-xs text-gray-600 dark:text-gray-300">Solana</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-xs font-mono text-gray-800 dark:text-gray-200">
+                                                        {formatAddress(solana.address)}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {solana.balance || "0"} SOL
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Menu Items */}

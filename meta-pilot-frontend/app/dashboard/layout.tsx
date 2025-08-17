@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useTheme } from "next-themes";
 import DashboardSidebar from "@/components/Dashbaord/DashboardSidebar";
 import NotificationsDropdown from "@/components/Dashbaord/NotificationsDropdown";
-import UserProfileDropdown from "@/components/Dashbaord/UserProfileDropdown";
+import UserDropdown from "@/components/Shared/UserDropdown";
 
 
 interface DashboardLayoutProps {
@@ -207,7 +207,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                             <NotificationsDropdown />
 
                             {/* User profile */}
-                            <UserProfileDropdown />
+                            <UserDropdown />
                         </div>
                     </div>
                 </motion.header>

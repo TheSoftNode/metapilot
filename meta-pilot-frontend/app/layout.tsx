@@ -3,7 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/Providers/theme-provider";
 import ChatSupport from "@/components/Shared/ChatSupport";
-import { Web3AuthProvider } from "@/components/Providers/web3auth-provider";
+import { Web3AuthProviderComponent } from "@/components/Providers/web3auth-provider";
+import { cookieToWeb3AuthState } from "@web3auth/modal";
+import { headers } from "next/headers";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -45,27 +47,30 @@ export const metadata: Metadata = {
   themeColor: "#040d36"
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const web3authInitialState = cookieToWeb3AuthState(headersList.get('cookie'));
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Web3AuthProvider>
+        <Web3AuthProviderComponent web3authInitialState={web3authInitialState}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             {children}
             <ChatSupport />
-          </Web3AuthProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </Web3AuthProviderComponent>
       </body>
     </html>
   );
